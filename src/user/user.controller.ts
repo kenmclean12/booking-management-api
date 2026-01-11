@@ -26,7 +26,11 @@ export class UserController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a user by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'ID of the user' })
-  @ApiResponse({ status: 200, description: 'The found user' })
+  @ApiResponse({
+    status: 200,
+    description: 'The found user',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findOne(
     @Param('id', ParseIntPipe) id: number,
@@ -36,22 +40,37 @@ export class UserController {
 
   @Get()
   @ApiOperation({ summary: 'Get all users' })
-  @ApiResponse({ status: 200, description: 'List of all users' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of all users',
+    type: [UserResponseDto],
+  })
   async findAll(): Promise<UserResponseDto[]> {
     return await this.userService.findAll();
   }
 
   @Post()
-  @ApiBody({ type: UserCreateDto })
   @ApiOperation({ summary: 'Create a new user' })
-  @ApiResponse({ status: 201, description: 'User created' })
+  @ApiBody({ type: UserCreateDto })
+  @ApiResponse({
+    status: 201,
+    description: 'User created',
+    type: UserResponseDto,
+  })
   async create(@Body() dto: UserCreateDto): Promise<UserResponseDto> {
     return await this.userService.create(dto);
   }
 
-  @ApiBody({ type: UserUpdateDto })
-  @ApiOperation({ summary: 'Update user information by user ID' })
   @Patch(':id')
+  @ApiOperation({ summary: 'Update user information by user ID' })
+  @ApiParam({ name: 'id', type: Number, description: 'ID of the user' })
+  @ApiBody({ type: UserUpdateDto })
+  @ApiResponse({
+    status: 200,
+    description: 'User updated',
+    type: UserResponseDto,
+  })
+  @ApiResponse({ status: 404, description: 'User not found' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UserUpdateDto,
@@ -62,7 +81,11 @@ export class UserController {
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a user by ID' })
   @ApiParam({ name: 'id', type: Number, description: 'ID of the user' })
-  @ApiResponse({ status: 200, description: 'User deleted' })
+  @ApiResponse({
+    status: 200,
+    description: 'User deleted',
+    type: UserResponseDto,
+  })
   @ApiResponse({ status: 404, description: 'User not found' })
   async remove(
     @Param('id', ParseIntPipe) id: number,
