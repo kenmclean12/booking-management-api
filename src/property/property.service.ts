@@ -20,7 +20,7 @@ export class PropertyService {
   async findOne(id: number): Promise<PropertyResponseDto> {
     const property = await this.prisma.property.findUnique({
       where: { id },
-      include: { owner: true },
+      include: { owner: true, address: true },
     });
 
     if (!property) {
@@ -32,14 +32,14 @@ export class PropertyService {
 
   async findAll(): Promise<PropertyResponseDto[]> {
     return (await this.prisma.property.findMany({
-      include: { owner: true },
+      include: { owner: true, address: true },
     })) as PropertyResponseDto[];
   }
 
   async findByUserId(id: number): Promise<PropertyResponseDto[]> {
     const properties = await this.prisma.property.findMany({
       where: { ownerId: id },
-      include: { owner: true },
+      include: { owner: true, address: true },
     });
 
     if (!properties) {
