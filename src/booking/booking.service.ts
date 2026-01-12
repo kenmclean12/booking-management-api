@@ -16,7 +16,6 @@ export class BookingService {
   async findOne(id: number): Promise<BookingResponseDto> {
     const booking = await this.prisma.booking.findUnique({
       where: { id },
-      include: { service: true, user: true },
     });
 
     if (!booking) {
@@ -27,9 +26,7 @@ export class BookingService {
   }
 
   async findAll(): Promise<BookingResponseDto[]> {
-    return (await this.prisma.booking.findMany({
-      include: { service: true, user: true },
-    })) as BookingResponseDto[];
+    return (await this.prisma.booking.findMany()) as BookingResponseDto[];
   }
 
   async findByUser(userId: number): Promise<BookingResponseDto[]> {
@@ -42,14 +39,12 @@ export class BookingService {
   async findByService(serviceId: number): Promise<BookingResponseDto[]> {
     return (await this.prisma.booking.findMany({
       where: { serviceId },
-      include: { service: true, user: true },
     })) as BookingResponseDto[];
   }
 
   async create(dto: BookingCreateDto): Promise<BookingResponseDto> {
     const created = await this.prisma.booking.create({
       data: dto,
-      include: { user: true, service: true },
     });
 
     if (!created) {
@@ -68,7 +63,6 @@ export class BookingService {
     const updated = await this.prisma.booking.update({
       where: { id },
       data: dto,
-      include: { user: true, service: true },
     });
 
     return updated as BookingResponseDto;

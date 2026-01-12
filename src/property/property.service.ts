@@ -32,7 +32,7 @@ export class PropertyService {
 
   async findAll(): Promise<PropertyResponseDto[]> {
     return (await this.prisma.property.findMany({
-      include: { owner: true, address: true },
+      include: { address: true },
     })) as PropertyResponseDto[];
   }
 
@@ -44,7 +44,11 @@ export class PropertyService {
   }
 
   async create(dto: PropertyCreateDto): Promise<PropertyResponseDto> {
-    const created = await this.prisma.property.create({ data: dto });
+    const created = await this.prisma.property.create({
+      data: dto,
+      include: { address: true },
+    });
+
     if (!created) {
       throw new BadRequestException(
         `Could not create property entry with provided data: ${JSON.stringify(dto)}`,
@@ -58,7 +62,11 @@ export class PropertyService {
     id: number,
     dto: PropertyUpdateDto,
   ): Promise<PropertyResponseDto> {
-    const existing = await this.prisma.property.findUnique({ where: { id } });
+    const existing = await this.prisma.property.findUnique({
+      where: { id },
+      include: { address: true },
+    });
+
     if (!existing) {
       throw new NotFoundException(`No user found with the provided ID: ${id}`);
     }
@@ -78,7 +86,11 @@ export class PropertyService {
   }
 
   async remove(id: number): Promise<PropertyResponseDto> {
-    const existing = await this.prisma.property.findUnique({ where: { id } });
+    const existing = await this.prisma.property.findUnique({
+      where: { id },
+      include: { address: true },
+    });
+
     if (!existing) {
       throw new NotFoundException(
         `No existing property found with provided ID: ${id}`,

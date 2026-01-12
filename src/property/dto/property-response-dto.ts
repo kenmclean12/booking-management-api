@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { UserResponseDto } from 'src/user/dto';
+import { AddressResponseDto } from 'src/address/dto';
 
 export class PropertyResponseDto {
   @ApiProperty({ description: 'Property ID', example: 1 })
@@ -18,10 +18,10 @@ export class PropertyResponseDto {
   ownerId: number;
 
   @ApiProperty({
-    description: 'Owner information',
-    type: () => UserResponseDto,
+    description: 'Address of the property',
+    example: '123 ABC Street',
   })
-  owner: UserResponseDto;
+  address?: AddressResponseDto;
 
   @ApiProperty({ description: 'Created timestamp', example: new Date() })
   createdAt: Date;

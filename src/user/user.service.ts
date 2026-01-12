@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
@@ -15,6 +16,7 @@ import {
   UserUpdateDto,
   PasswordResetDto,
 } from './dto';
+import { userToResponse } from './utils/userToResponse';
 
 @Injectable()
 export class UserService {
@@ -23,12 +25,12 @@ export class UserService {
   async findOne(id: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id } });
     if (!user) throw new NotFoundException(`No user found with ID: ${id}`);
-    return user as UserResponseDto;
+    return userToResponse(user);
   }
 
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.prisma.user.findMany();
-    return users as UserResponseDto[];
+    return users.map((u) => userToResponse(u));
   }
 
   async create(dto: UserCreateDto): Promise<UserResponseDto> {
@@ -51,7 +53,7 @@ export class UserService {
         `Could not create user with data: ${JSON.stringify(dto)}`,
       );
 
-    return created as UserResponseDto;
+    return userToResponse(created);
   }
 
   async update(id: number, dto: UserUpdateDto): Promise<UserResponseDto> {
@@ -69,7 +71,7 @@ export class UserService {
         `Could not update user ID: ${id} with data: ${JSON.stringify(dto)}`,
       );
 
-    return updated as UserResponseDto;
+    return userToResponse(updated);
   }
 
   async changePassword(
@@ -93,7 +95,7 @@ export class UserService {
       data: { password: hashedNewPassword },
     });
 
-    return updated as UserResponseDto;
+    return userToResponse(updated);
   }
 
   async remove(id: number): Promise<UserResponseDto> {
@@ -102,6 +104,6 @@ export class UserService {
       throw new NotFoundException(`No user found with ID: ${id}`);
 
     await this.prisma.user.delete({ where: { id } });
-    return existingUser as UserResponseDto;
+    return userToResponse(existingUser);
   }
 }
