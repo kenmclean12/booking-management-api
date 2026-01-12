@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   Body,
   Controller,
@@ -7,9 +8,15 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { UserCreateDto, UserResponseDto, UserUpdateDto } from './dto';
+import {
+  PasswordResetDto,
+  UserCreateDto,
+  UserResponseDto,
+  UserUpdateDto,
+} from './dto';
 import {
   ApiTags,
   ApiOperation,
@@ -78,6 +85,17 @@ export class UserController {
     @Body() dto: UserUpdateDto,
   ): Promise<UserResponseDto> {
     return await this.userService.update(id, dto);
+  }
+
+  @Patch('change-password')
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiBody({ type: PasswordResetDto })
+  async changePassword(
+    @Req() req,
+    @Body() dto: PasswordResetDto,
+  ): Promise<UserResponseDto> {
+    const userId = req.user.id as number;
+    return await this.userService.changePassword(userId, dto);
   }
 
   @Delete(':id')

@@ -1,14 +1,20 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import {
   BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserCreateDto, UserResponseDto, UserUpdateDto } from './dto';
+import {
+  UserCreateDto,
+  UserResponseDto,
+  UserUpdateDto,
+  PasswordResetDto,
+} from './dto';
 
 @Injectable()
 export class UserService {
@@ -16,65 +22,84 @@ export class UserService {
 
   async findOne(id: number): Promise<UserResponseDto> {
     const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) {
-      throw new NotFoundException(`No user found w/ provided ID: ${id}`);
-    }
-
+    if (!user) throw new NotFoundException(`No user found with ID: ${id}`);
     return user as UserResponseDto;
   }
 
   async findAll(): Promise<UserResponseDto[]> {
-    return (await this.prisma.user.findMany()) as UserResponseDto[];
+    const users = await this.prisma.user.findMany();
+    return users as UserResponseDto[];
   }
 
   async create(dto: UserCreateDto): Promise<UserResponseDto> {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: dto.email },
     });
-
-    if (existingUser) {
+    if (existingUser)
       throw new ConflictException(
-        `A user with the email address ${dto.email} already exists`,
+        `User with email ${dto.email} already exists`,
       );
-    }
 
-    const created = await this.prisma.user.create({ data: dto });
-    if (!created) {
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+
+    const created = await this.prisma.user.create({
+      data: { ...dto, password: hashedPassword },
+    });
+
+    if (!created)
       throw new BadRequestException(
-        `Could not create user with the provided data: ${JSON.stringify(dto)}`,
+        `Could not create user with data: ${JSON.stringify(dto)}`,
       );
-    }
 
     return created as UserResponseDto;
   }
 
   async update(id: number, dto: UserUpdateDto): Promise<UserResponseDto> {
     const existingUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!existingUser) {
-      throw new NotFoundException(`No user found with the provided ID: ${id}`);
-    }
+    if (!existingUser)
+      throw new NotFoundException(`No user found with ID: ${id}`);
 
     const updated = await this.prisma.user.update({
       where: { id },
       data: dto,
     });
 
-    if (!updated) {
+    if (!updated)
       throw new BadRequestException(
-        `Could not update user id: ${id} with provided data: ${JSON.stringify(dto)}`,
+        `Could not update user ID: ${id} with data: ${JSON.stringify(dto)}`,
       );
-    }
+
+    return updated as UserResponseDto;
+  }
+
+  async changePassword(
+    userId: number,
+    dto: PasswordResetDto,
+  ): Promise<UserResponseDto> {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user) throw new NotFoundException(`No user found with ID: ${userId}`);
+
+    const passwordMatches = await bcrypt.compare(
+      dto.oldPassword,
+      user.password,
+    );
+    if (!passwordMatches)
+      throw new BadRequestException('Old password does not match');
+
+    const hashedNewPassword = await bcrypt.hash(dto.newPassword, 10);
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword },
+    });
 
     return updated as UserResponseDto;
   }
 
   async remove(id: number): Promise<UserResponseDto> {
     const existingUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!existingUser) {
-      throw new NotFoundException(
-        `No user was found with the provided ID: ${id}`,
-      );
-    }
+    if (!existingUser)
+      throw new NotFoundException(`No user found with ID: ${id}`);
 
     await this.prisma.user.delete({ where: { id } });
     return existingUser as UserResponseDto;
